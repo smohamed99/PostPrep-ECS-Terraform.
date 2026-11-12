@@ -27,8 +27,8 @@ RUN yarn build
 #clearçFROM nginxinc/nginx-unprivileged:stable-alpine
 FROM cgr.dev/chainguard/nginx:latest
 
-COPY default.conf /etc/nginx/conf.d/default.conf
-
+COPY default.conf /etc/nginx/conf.d/nginx.default.conf
+  
 COPY --from=build /app/build /usr/share/nginx/html
 
 EXPOSE 8080
