@@ -1,0 +1,32 @@
+terraform {
+  required_version = ">= 1.10"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.24.0"
+    }
+  }
+
+  # First apply runs on the local backend - the bucket below doesn't
+  # exist yet. Once it does, uncomment and run: terraform init -migrate-state
+  #
+   backend "s3" {
+     bucket       = "post-prep-tfstate-772097700084"
+     key          = "bootstrap/terraform.tfstate"
+     region       = "eu-west-2"
+     encrypt      = true
+     use_lockfile = true
+   }
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project   = var.project_name
+      ManagedBy = "terraform"
+    }
+  }
+}
