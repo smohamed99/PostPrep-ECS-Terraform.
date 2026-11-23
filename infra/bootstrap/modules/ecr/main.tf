@@ -1,8 +1,8 @@
-# Lives in bootstrap so destroying infra/ doesn't delete the images.
-# force_delete deliberately unset - the default refuses to destroy a
-# repository that still holds images.
-resource "aws_ecr_repository" "app" {
-  name                 = var.ecr_repository_name
+# force_delete deliberately left unset. The default refuses to destroy a
+# repository that still holds images, which is the safety net you want on
+# the one resource that must survive an infra teardown.
+resource "aws_ecr_repository" "this" {
+  name                 = var.repository_name
   image_tag_mutability = var.image_tag_mutability
 
   image_scanning_configuration {
@@ -10,13 +10,14 @@ resource "aws_ecr_repository" "app" {
   }
 
   encryption_configuration {
-    encryption_type = "AES256"
+    encryption_type = var.encryption_type
   }
 }
 
-# Image hygiene. Untagged images are layers orphaned by a newer push.
-resource "aws_ecr_lifecycle_policy" "app" {
-  repository = aws_ecr_repository.app.name
+# Image hygiene. Untagged images are layers orphaned by a newer push and
+# are pure cost; tagged images accumulate one per deploy.
+resource "aws_ecr_lifecycle_policy" "this" {
+  repository = aws_ecr_repository.this.name
 
   policy = jsonencode({
     rules = [

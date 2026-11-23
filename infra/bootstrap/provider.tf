@@ -11,13 +11,13 @@ terraform {
   # First apply runs on the local backend - the bucket below doesn't
   # exist yet. Once it does, uncomment and run: terraform init -migrate-state
   #
-   backend "s3" {
-     bucket       = "post-prep-tfstate-772097700084"
-     key          = "bootstrap/terraform.tfstate"
-     region       = "eu-west-2"
-     encrypt      = true
-     use_lockfile = true
-   }
+  backend "s3" {
+    bucket       = "post-prep-tfstate-772097700084"
+    key          = "bootstrap/terraform.tfstate"
+    region       = "eu-west-2"
+    encrypt      = true
+    use_lockfile = true
+  }
 }
 
 provider "aws" {

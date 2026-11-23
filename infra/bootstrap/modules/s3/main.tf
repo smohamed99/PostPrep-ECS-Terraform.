@@ -1,12 +1,11 @@
-# The bucket infra/ will store its Terraform state in.
-resource "aws_s3_bucket" "tfstate" {
-  bucket = var.state_bucket_name
+resource "aws_s3_bucket" "this" {
+  bucket = var.bucket_name
 }
 
 # Keeps every version of the state file. The only route back from a
 # corrupted or deleted state - there is no other backup.
-resource "aws_s3_bucket_versioning" "tfstate" {
-  bucket = aws_s3_bucket.tfstate.id
+resource "aws_s3_bucket_versioning" "this" {
+  bucket = aws_s3_bucket.this.id
 
   versioning_configuration {
     status = "Enabled"
@@ -14,8 +13,8 @@ resource "aws_s3_bucket_versioning" "tfstate" {
 }
 
 # State files contain resource attributes in plaintext.
-resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
-  bucket = aws_s3_bucket.tfstate.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
+  bucket = aws_s3_bucket.this.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -25,8 +24,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
 }
 
 # A readable state bucket is a complete map of the infrastructure.
-resource "aws_s3_bucket_public_access_block" "tfstate" {
-  bucket = aws_s3_bucket.tfstate.id
+resource "aws_s3_bucket_public_access_block" "this" {
+  bucket = aws_s3_bucket.this.id
 
   block_public_acls       = true
   block_public_policy     = true
