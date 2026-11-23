@@ -4,6 +4,14 @@ data "aws_ecr_repository" "app" {
   name = var.ecr_repository_name
 }
 
+# Resolves the tag to a digest, and fails at plan time if the tag does not
+# exist - instead of the service creating fine and tasks dying later with
+# CannotPullContainerError.
+data "aws_ecr_image" "app" {
+  repository_name = var.ecr_repository_name
+  image_tag       = var.image_tag
+}
+
 data "aws_iam_policy_document" "ecs_task_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -65,10 +73,17 @@ resource "aws_ecs_task_definition" "app" {
   memory                   = var.task_memory
   execution_role_arn       = aws_iam_role.ecs_execution.arn
 
+  # Declared explicitly so an architecture mismatch is caught here rather
+  # than at runtime as an exec format error. Built on ARM, runs on AMD64.
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+
   container_definitions = jsonencode([
     {
       name      = var.project_name
-      image     = "${data.aws_ecr_repository.app.repository_url}:${var.image_tag}"
+      image     = "${data.aws_ecr_repository.app.repository_url}@${data.aws_ecr_image.app.image_digest}"
       essential = true
 
       portMappings = [
