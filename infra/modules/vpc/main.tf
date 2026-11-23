@@ -38,7 +38,6 @@ resource "aws_subnet" "public" {
 }
 
 # netnum 2 and 3 -> 10.0.1.0/25 and 10.0.1.128/25
-# No map_public_ip_on_launch - these must not hand out public addresses.
 resource "aws_subnet" "private" {
   count = var.az_count
 
@@ -52,7 +51,6 @@ resource "aws_subnet" "private" {
   }
 }
 
-# One Elastic IP per AZ the regional NAT gateway will cover.
 resource "aws_eip" "nat" {
   count  = var.az_count
   domain = "vpc"
@@ -62,10 +60,9 @@ resource "aws_eip" "nat" {
   }
 }
 
-# A single regional NAT gateway covering both AZs, in manual mode.
-# Manual means the AZs are declared up front rather than discovered -
-# no 15 to 60 minute expansion wait after each rebuild, and no traffic
-# crossing an AZ boundary to reach a gateway that hasn't expanded yet.
+# One regional NAT gateway covering both AZs, in manual mode. Manual means
+# the AZs are declared up front rather than discovered, so there is no
+# expansion wait after a rebuild and no cross-AZ traffic in the meantime.
 resource "aws_nat_gateway" "main" {
   vpc_id            = aws_vpc.main.id
   availability_mode = "regional"
@@ -102,7 +99,6 @@ resource "aws_route_table" "public" {
 }
 
 # One private route table, because one regional NAT serves both AZs.
-# Zonal NATs would need one table per AZ, each pointing at its own.
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 

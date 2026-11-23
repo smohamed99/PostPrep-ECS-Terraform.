@@ -1,7 +1,7 @@
 resource "aws_security_group" "alb" {
   name        = "${var.project_name}-alb-sg"
   description = "ALB: accepts HTTP and HTTPS from the internet"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   tags = {
     Name = "${var.project_name}-alb-sg"
@@ -36,13 +36,16 @@ resource "aws_vpc_security_group_egress_rule" "alb_all" {
 resource "aws_security_group" "ecs" {
   name        = "${var.project_name}-ecs-sg"
   description = "ECS tasks: accept traffic only from the ALB"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   tags = {
     Name = "${var.project_name}-ecs-sg"
   }
 }
 
+# Referencing the ALB's security group rather than a CIDR means nothing
+# else in the VPC can reach the tasks, and the rule stays correct if the
+# ALB's addresses change.
 resource "aws_vpc_security_group_ingress_rule" "ecs_from_alb" {
   security_group_id            = aws_security_group.ecs.id
   description                  = "App port, from the ALB security group only"

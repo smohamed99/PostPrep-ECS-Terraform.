@@ -1,26 +1,26 @@
 output "vpc_id" {
   description = "ID of the VPC"
-  value       = aws_vpc.main.id
+  value       = module.vpc.vpc_id
 }
 
 output "public_subnet_ids" {
-  description = "IDs of the public subnets - the ALB goes here"
-  value       = aws_subnet.public[*].id
+  description = "IDs of the public subnets - the ALB lives here"
+  value       = module.vpc.public_subnet_ids
 }
 
 output "private_subnet_ids" {
-  description = "IDs of the private subnets - ECS tasks go here"
-  value       = aws_subnet.private[*].id
+  description = "IDs of the private subnets - ECS tasks live here"
+  value       = module.vpc.private_subnet_ids
 }
 
 output "nat_gateway_public_ips" {
-  description = "Public IPs traffic leaves from"
-  value       = aws_eip.nat[*].public_ip
+  description = "Public IPs outbound traffic leaves from"
+  value       = module.vpc.nat_gateway_public_ips
 }
 
 output "alb_dns_name" {
   description = "ALB hostname - useful for testing before DNS propagates"
-  value       = aws_lb.main.dns_name
+  value       = module.alb.alb_dns_name
 }
 
 output "app_url" {
@@ -30,5 +30,10 @@ output "app_url" {
 
 output "ecs_cluster_name" {
   description = "Cluster name, for the AWS CLI debug commands"
-  value       = aws_ecs_cluster.main.name
+  value       = module.ecs.cluster_name
+}
+
+output "ecs_service_name" {
+  description = "Service name, for the AWS CLI debug commands"
+  value       = module.ecs.service_name
 }

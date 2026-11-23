@@ -1,5 +1,44 @@
+# Read only. The repository is owned by bootstrap/ so that destroying
+# this configuration does not delete the images.
 data "aws_ecr_repository" "app" {
   name = var.ecr_repository_name
+}
+
+data "aws_iam_policy_document" "ecs_task_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+# Used by the ECS agent to pull the image and write logs. No task role:
+# the application calls no AWS APIs, so it needs no identity of its own.
+resource "aws_iam_role" "ecs_execution" {
+  name               = "${var.project_name}-ecs-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume.json
+
+  tags = {
+    Name = "${var.project_name}-ecs-execution-role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_execution" {
+  role       = aws_iam_role.ecs_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# Retention set deliberately - the default is never expire.
+resource "aws_cloudwatch_log_group" "ecs" {
+  name              = "/ecs/${var.project_name}"
+  retention_in_days = var.log_retention_days
+
+  tags = {
+    Name = "${var.project_name}-logs"
+  }
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -15,6 +54,9 @@ resource "aws_ecs_cluster" "main" {
   }
 }
 
+# No container-level healthCheck: a CMD-SHELL curl check cannot work on a
+# minimal image with no shell and no curl. The target group health check
+# runs from outside the container and is the one that counts.
 resource "aws_ecs_task_definition" "app" {
   family                   = var.project_name
   network_mode             = "awsvpc"
@@ -60,20 +102,18 @@ resource "aws_ecs_service" "app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs.id]
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.security_group_id]
     assign_public_ip = false
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.app.arn
+    target_group_arn = var.target_group_arn
     container_name   = var.project_name
     container_port   = var.container_port
   }
 
   health_check_grace_period_seconds = 60
-
-  depends_on = [aws_lb_listener.https]
 
   tags = {
     Name = "${var.project_name}-service"

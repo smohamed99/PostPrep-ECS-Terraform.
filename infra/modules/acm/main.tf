@@ -1,8 +1,3 @@
-data "aws_route53_zone" "labs" {
-  name         = var.hosted_zone_name
-  private_zone = false
-}
-
 resource "aws_acm_certificate" "app" {
   domain_name       = var.domain_name
   validation_method = "DNS"
@@ -25,7 +20,7 @@ resource "aws_route53_record" "cert_validation" {
     }
   }
 
-  zone_id         = data.aws_route53_zone.labs.zone_id
+  zone_id         = var.hosted_zone_id
   name            = each.value.name
   type            = each.value.type
   records         = [each.value.record]
@@ -33,6 +28,8 @@ resource "aws_route53_record" "cert_validation" {
   allow_overwrite = true
 }
 
+# Not a real AWS resource - this is Terraform waiting until the
+# certificate is issued before anything downstream can use it.
 resource "aws_acm_certificate_validation" "app" {
   certificate_arn         = aws_acm_certificate.app.arn
   validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
