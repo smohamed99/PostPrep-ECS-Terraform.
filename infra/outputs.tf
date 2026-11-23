@@ -17,3 +17,18 @@ output "nat_gateway_public_ips" {
   description = "Public IPs traffic leaves from"
   value       = aws_eip.nat[*].public_ip
 }
+
+output "alb_dns_name" {
+  description = "ALB hostname - useful for testing before DNS propagates"
+  value       = aws_lb.main.dns_name
+}
+
+output "app_url" {
+  description = "The live application URL"
+  value       = "https://${var.domain_name}"
+}
+
+output "ecs_cluster_name" {
+  description = "Cluster name, for the AWS CLI debug commands"
+  value       = aws_ecs_cluster.main.name
+}
