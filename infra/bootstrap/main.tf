@@ -31,7 +31,9 @@ module "github_oidc" {
 
   project_name            = var.project_name
   github_owner            = "smohamed99"
+  github_owner_id         = "208841345"
   github_repo             = "PostPrep-ECS-Terraform."
+  github_repo_id          = "1453272013"
   ecr_repository_arn      = module.ecr.repository_arn
   state_bucket_arn        = module.s3.bucket_arn
   image_tag_parameter_arn = aws_ssm_parameter.image_tag.arn
