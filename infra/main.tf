@@ -5,6 +5,10 @@ data "aws_route53_zone" "labs" {
   private_zone = false
 }
 
+data "aws_ssm_parameter" "image_tag" {
+  name = "/${var.project_name}/image_tag"
+}
+
 module "vpc" {
   source = "./modules/vpc"
 
@@ -49,7 +53,7 @@ module "ecs" {
   security_group_id   = module.security.ecs_security_group_id
   target_group_arn    = module.alb.target_group_arn
   ecr_repository_name = var.ecr_repository_name
-  image_tag           = var.image_tag
+  image_tag           = nonsensitive(data.aws_ssm_parameter.image_tag.value)
   container_port      = var.container_port
   task_cpu            = var.task_cpu
   task_memory         = var.task_memory

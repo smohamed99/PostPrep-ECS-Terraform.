@@ -16,34 +16,23 @@ module "ecr" {
   image_retention_count = var.image_retention_count
 }
 
-# Tell Terraform these resources moved into modules rather than being
-# destroyed and recreated. Delete these blocks once the move has applied.
-moved {
-  from = aws_s3_bucket.tfstate
-  to   = module.s3.aws_s3_bucket.this
+resource "aws_ssm_parameter" "image_tag" {
+  name  = "/${var.project_name}/image_tag"
+  type  = "String"
+  value = "e499857"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
-moved {
-  from = aws_s3_bucket_versioning.tfstate
-  to   = module.s3.aws_s3_bucket_versioning.this
-}
+module "github_oidc" {
+  source = "./modules/github-oidc"
 
-moved {
-  from = aws_s3_bucket_server_side_encryption_configuration.tfstate
-  to   = module.s3.aws_s3_bucket_server_side_encryption_configuration.this
-}
-
-moved {
-  from = aws_s3_bucket_public_access_block.tfstate
-  to   = module.s3.aws_s3_bucket_public_access_block.this
-}
-
-moved {
-  from = aws_ecr_repository.app
-  to   = module.ecr.aws_ecr_repository.this
-}
-
-moved {
-  from = aws_ecr_lifecycle_policy.app
-  to   = module.ecr.aws_ecr_lifecycle_policy.this
+  project_name            = var.project_name
+  github_owner            = "smohamed99"
+  github_repo             = "PostPrep-ECS-Terraform."
+  ecr_repository_arn      = module.ecr.repository_arn
+  state_bucket_arn        = module.s3.bucket_arn
+  image_tag_parameter_arn = aws_ssm_parameter.image_tag.arn
 }

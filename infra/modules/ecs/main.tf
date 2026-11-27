@@ -130,6 +130,13 @@ resource "aws_ecs_service" "app" {
 
   health_check_grace_period_seconds = 60
 
+    wait_for_steady_state = true
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
   tags = {
     Name = "${var.project_name}-service"
   }

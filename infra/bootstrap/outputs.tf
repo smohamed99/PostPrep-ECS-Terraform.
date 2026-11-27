@@ -17,3 +17,6 @@ output "ecr_repository_arn" {
   description = "Repository ARN - needed later to scope the CI build-push policy"
   value       = module.ecr.repository_arn
 }
+
+output "gha_build_role_arn" { value = module.github_oidc.build_role_arn }
+output "gha_terraform_role_arn" { value = module.github_oidc.terraform_role_arn }
